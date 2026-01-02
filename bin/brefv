@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+
+"""
+Command line utility for decoding/encoding to the brefv message format.
+"""
+
+# pylint: disable=duplicate-code
+
+import sys
+import json
+import logging
+import warnings
+import argparse
+from base64 import b64encode, b64decode
+
+import parse
+import brefv  # pylint: disable=import-self
+from google.protobuf.json_format import ParseDict, MessageToDict
+
+logger = logging.getLogger("brefv")
+
+
+def decode(args: argparse.Namespace):  # pylint: disable=redefined-outer-name
+    """Decode topics/envelopes from stdin to stdout"""
+
+    # Compile pattern
+    input_pattern = parse.compile(args.input_specification)
+
+    for line in sys.stdin:
+        logger.debug("Handling line with content: %s", line)
+        res = input_pattern.parse(line.rstrip())
+
+        if not res:
+            logger.error(
+                "Could not parse line: %s according to the input_specification: %s",
+                line,
+                args.input_specification,
+            )
+            continue
+
+        # Make input available as output (for passthrough operations)
+        output = res.named
+
+        if topic := res.named.get("topic"):
+            output.update(brefv.parse_pub_sub_topic(topic))
+
+        if envelope := res.named.get("envelope"):
+            envelope = b64decode(envelope.encode())
+            received_at, enclosed_at, payload_raw = brefv.uncover(envelope)
+            payload_b64 = b64encode(payload_raw).decode()
+            output.update(
+                {
+                    "received_at": received_at,
+                    "enclosed_at": enclosed_at,
+                    "payload_raw": payload_raw,
+                    "payload_b64": payload_b64,
+                }
+            )
+
+        tag = output.get("tag")
+        payload_raw = output.get("payload_raw")
+
+        if tag and payload_raw and brefv.get_tag_encoding(tag) == "protobuf":
+            type_name = brefv.get_tag_description(tag)
+            message = brefv.decode_protobuf_payload_from_type_name(
+                payload_raw, type_name
+            )
+            output.update({"payload_pb2js": json.dumps(MessageToDict(message))})
+
+        sys.stdout.write(args.output_specification.format(**output) + "\n")
+        sys.stdout.flush()
+
+
+def encode(args: argparse.Namespace):  # pylint: disable=redefined-outer-name
+    """Encode payloads from stdin to stdout"""
+
+    # Compile pattern
+    input_pattern = parse.compile(args.input_specification)
+
+    for line in sys.stdin:
+        logger.debug("Handling line with content: %s", line)
+        res = input_pattern.parse(line.rstrip())
+
+        if not res:
+            logger.error(
+                "Could not parse line: %s according to the input_specification: %s",
+                line,
+                args.input_specification,
+            )
+            continue
+
+        logger.debug("Parsed input: %s", res.named)
+
+        # Make input available as output (for passthrough operations)
+        output = res.named
+
+        if payload_raw := res.named.get("payload_raw"):
+            logger.debug("Found 'payload_raw' in input!")
+            payload = payload_raw.encode()
+            envelope = brefv.enclose(payload)
+            output["envelope"] = b64encode(envelope).decode()
+        elif payload_b64 := res.named.get("payload_b64"):
+            logger.debug("Found 'payload_b64' in input!")
+            payload = b64decode(payload_b64.encode())
+            envelope = brefv.enclose(payload)
+            output["envelope"] = b64encode(envelope).decode()
+        elif payload_pb2js := res.named.get("payload_pb2js"):
+            logger.debug("Found 'payload_pb2js' in input!")
+            if not (topic := res.named.get("topic")):
+                raise RuntimeError("payload_pb2js must be accompanied with a topic!")
+
+            parts = brefv.parse_pub_sub_topic(topic)
+            tag = parts["tag"]
+
+            if (
+                not brefv.is_tag_well_known(tag)
+                or not brefv.get_tag_encoding(tag) == "protobuf"
+            ):
+                warnings.warn(
+                    "payload_pb2js requires a well-known tag using protobuf encoding"
+                )
+                continue
+
+            type_name = brefv.get_tag_description(tag)
+            payload = brefv._PROTOBUF_INSTANCES[  # pylint: disable=protected-access
+                type_name
+            ]()
+
+            payload_pb2js = json.loads(payload_pb2js)
+
+            payload = ParseDict(payload_pb2js, payload)
+            envelope = brefv.enclose(payload.SerializeToString())
+            output["envelope"] = b64encode(envelope).decode()
+
+        # Write to stdout
+        sys.stdout.write(args.output_specification.format(**output) + "\n")
+        sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="brefv")
+    parser.add_argument(
+        "--log-level",
+        type=lambda level: getattr(logging, level),
+        default=logging.WARNING,
+    )
+
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument(
+        "input_specification",
+        type=str,
+        help="Example: '{payload}',"
+        "See https://github.com/r1chardj0n3s/parse#format-specification",
+    )
+    common_parser.add_argument(
+        "output_specification",
+        type=str,
+        help="Example: '{envelope}',"
+        "See https://github.com/r1chardj0n3s/parse#format-specification",
+    )
+
+    subparsers = parser.add_subparsers(required=True)
+
+    decode_parser = subparsers.add_parser("decode", parents=[common_parser])
+    decode_parser.set_defaults(func=decode)
+
+    encode_parser = subparsers.add_parser("encode", parents=[common_parser])
+    encode_parser.set_defaults(func=encode)
+
+    args = parser.parse_args()
+
+    # Setup logger
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s %(name)s %(message)s", level=args.log_level
+    )
+    logging.captureWarnings(True)
+    warnings.filterwarnings("once")
+
+    # Dispatch
+    args.func(args)
