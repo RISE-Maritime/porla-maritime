@@ -4,6 +4,5 @@ pyais==2.6.5
 # Pattern parsing (for canboat2pontos)
 parse==1.20.2
 
-# Zenoh CLI and Keelson codecs (from porla-zenoh approach)
-zenoh-cli==0.6.7
-keelson==0.4.3
+# Keelson codecs (registers with zenoh-cli from base image)
+keelson==0.4.6
