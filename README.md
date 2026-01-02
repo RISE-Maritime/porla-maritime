@@ -1,11 +1,11 @@
 # porla-maritime
 
-A consolidated maritime extension for [`porla`](https://github.com/RISE-Maritime/porla) that combines NMEA/NMEA2000 handling, PONTOS format support, and Keelson data format compatibility into a single image.
+A consolidated maritime extension for [`porla`](https://github.com/RISE-Maritime/porla) that combines NMEA/NMEA2000 handling, PONTOS format support, Zenoh messaging, and Keelson data format compatibility into a single image.
 
 This extension consolidates functionality from:
 - [porla-nmea](https://github.com/RISE-Maritime/porla-nmea) - NMEA0183/NMEA2000 handling via canboat
 - [porla-pontos](https://github.com/MO-RISE/porla-pontos) - PONTOS-hub data format compatibility
-- [porla-keelson](https://github.com/MO-RISE/porla-keelson) - Keelson data format compatibility
+- [porla-zenoh](https://github.com/MO-RISE/porla-zenoh) - Zenoh messaging and Keelson codec support
 
 ## What
 
@@ -18,7 +18,7 @@ This extension provides tools for maritime data acquisition and transformation, 
 | `ais` | porla-nmea | Encode/decode AIS messages between NMEA0183 and JSON formats |
 | `lwe450` | porla-nmea | Interface to LWE450 multicast networks (IEC 61162-450) |
 | `canboat2pontos` | porla-pontos | Convert canboat analyzer JSON output to PONTOS format |
-| `brefv` | porla-keelson | Encode/decode data in brefv format for Keelson compatibility |
+| `zenoh` | porla-zenoh | Zenoh CLI for pub/sub messaging |
 
 ### 3rd-party Tools (canboat)
 
@@ -32,6 +32,24 @@ Tools from [canboat](https://github.com/canboat/canboat) v4.12.0:
 | `n2kd` | NMEA2000 daemon for network distribution |
 | `raw2json` | Convert raw NMEA2000 data to JSON |
 | `n2k-csv-analyzer` | CSV output analyzer for NMEA2000 |
+
+### Keelson Codecs
+
+The [keelson](https://github.com/RISE-Maritime/keelson) Python SDK provides codecs that integrate with zenoh-cli for encoding/decoding Keelson envelope format:
+
+**Encoders:**
+| Codec | Description |
+|-------|-------------|
+| `keelson-enclose-from-text` | Enclose text payload in Keelson envelope |
+| `keelson-enclose-from-base64` | Enclose base64 payload in Keelson envelope |
+| `keelson-enclose-from-json` | Enclose JSON payload in Keelson envelope |
+
+**Decoders:**
+| Codec | Description |
+|-------|-------------|
+| `keelson-uncover-to-text` | Uncover Keelson envelope to text |
+| `keelson-uncover-to-base64` | Uncover Keelson envelope to base64 |
+| `keelson-uncover-to-json` | Uncover Keelson envelope to JSON |
 
 ## Usage
 
@@ -100,16 +118,20 @@ Supported PGNs:
 - 129026: COG & SOG
 - 129029: GNSS Position
 
-#### brefv
+#### zenoh (with Keelson codecs)
 
-Encode/decode brefv format for Keelson:
+Publish data to Zenoh with Keelson envelope encoding:
 
 ```bash
-# Decode envelope
-echo "{envelope}" | brefv decode '{envelope}' '{payload_b64}'
+# Publish with keelson encoding
+from_bus 1 | zenoh put --key my/key/expression \
+    --encode keelson-enclose-from-text \
+    --line '{message}'
 
-# Encode payload
-echo "payload" | brefv encode '{payload_raw}' '{envelope}'
+# Subscribe and decode keelson envelopes
+zenoh sub --key 'my/key/**' \
+    --decode keelson-uncover-to-json \
+    --line '{key} {message}'
 ```
 
 ### Examples
@@ -168,6 +190,31 @@ services:
     network_mode: host
     restart: unless-stopped
     command: ["from_bus 3 | mqtt_from_topic"]
+```
+
+#### NMEA2000 to Zenoh with Keelson Format
+
+Publish NMEA2000 data to Zenoh using Keelson envelope format:
+
+```yaml
+services:
+  source:
+    image: ghcr.io/rise-maritime/porla:v0.5.0
+    network_mode: host
+    restart: unless-stopped
+    command: ["socat UDP4-RECV:1457,reuseaddr STDOUT | to_bus 1"]
+
+  decode:
+    image: ghcr.io/rise-maritime/porla-maritime
+    network_mode: host
+    restart: unless-stopped
+    command: ["from_bus 1 | analyzer --json | timestamp --epoch | to_bus 2"]
+
+  sink:
+    image: ghcr.io/rise-maritime/porla-maritime
+    network_mode: host
+    restart: unless-stopped
+    command: ["from_bus 2 | zenoh put --key vessel/nmea2000 --encode keelson-enclose-from-json --line '{message}'"]
 ```
 
 #### LWE450 Network Interface
@@ -231,7 +278,7 @@ services:
 
 ## Migration from Separate Extensions
 
-If you're currently using separate porla-nmea, porla-pontos, or porla-keelson images, you can migrate by simply replacing the image references:
+If you're currently using separate porla-nmea, porla-pontos, or porla-zenoh images, you can migrate by simply replacing the image references:
 
 **Before:**
 ```yaml
@@ -243,6 +290,10 @@ services:
   transform_2:
     image: ghcr.io/mo-rise/porla-pontos
     command: ["from_bus 2 | canboat2pontos test_vessel | to_bus 3"]
+
+  sink:
+    image: ghcr.io/mo-rise/porla-zenoh
+    command: ["from_bus 3 | zenoh put --key my/key --line '{message}'"]
 ```
 
 **After:**
@@ -255,6 +306,10 @@ services:
   transform_2:
     image: ghcr.io/rise-maritime/porla-maritime
     command: ["from_bus 2 | canboat2pontos test_vessel | to_bus 3"]
+
+  sink:
+    image: ghcr.io/rise-maritime/porla-maritime
+    command: ["from_bus 3 | zenoh put --key my/key --line '{message}'"]
 ```
 
 All tool interfaces are preserved for drop-in replacement compatibility.

@@ -51,9 +51,34 @@ load "bats-helpers/bats-file/load"
     assert_success
 }
 
-@test "brefv script is available" {
-    run brefv --help
+# Zenoh CLI tests
+@test "zenoh CLI is available" {
+    run zenoh --help
     assert_success
+    assert_output --partial "zenoh"
+}
+
+# Keelson codec tests
+@test "keelson package is installed" {
+    run python3 -c "import keelson; print(keelson.__name__)"
+    assert_success
+    assert_output "keelson"
+}
+
+@test "keelson encoders are registered" {
+    run zenoh --list-encoders
+    assert_success
+    assert_output --partial "keelson-enclose-from-text"
+    assert_output --partial "keelson-enclose-from-base64"
+    assert_output --partial "keelson-enclose-from-json"
+}
+
+@test "keelson decoders are registered" {
+    run zenoh --list-decoders
+    assert_success
+    assert_output --partial "keelson-uncover-to-text"
+    assert_output --partial "keelson-uncover-to-base64"
+    assert_output --partial "keelson-uncover-to-json"
 }
 
 # Functional tests

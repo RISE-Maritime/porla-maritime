@@ -18,11 +18,6 @@ RUN wget -qO- https://github.com/canboat/canboat/archive/refs/tags/v4.12.0.tar.g
 # Final image
 FROM ghcr.io/rise-maritime/porla:v0.5.0
 
-# Install git for pip dependencies from git repos
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install Python dependencies
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt \

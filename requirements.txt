@@ -1,8 +1,9 @@
 # NMEA/AIS tools (from porla-nmea)
 pyais==2.6.5
 
-# Pattern parsing (for canboat2pontos and brefv)
+# Pattern parsing (for canboat2pontos)
 parse==1.20.2
 
-# Keelson/brefv support (from porla-keelson)
-git+https://github.com/MO-RISE/keelson.git@0.1.0-pre.15#subdirectory=brefv/python
+# Zenoh CLI and Keelson codecs (from porla-zenoh approach)
+zenoh-cli==0.6.7
+keelson==0.4.3
