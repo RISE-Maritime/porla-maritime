@@ -8,46 +8,45 @@ This is a maritime data extension for [porla](https://github.com/MO-RISE/porla),
 
 ## Build and Test Commands
 
-**Build Docker image:**
 ```bash
-docker build -t porla-maritime .
+docker build -t porla-maritime .          # Build Docker image
+bats tests/                               # Run all tests
+bats tests/test-extension.bats            # Run single test file
+black bin/ && pylint bin/                 # Lint Python code
+shellcheck <script>                       # Lint shell scripts
+pip install -r requirements_dev.txt       # Install dev dependencies
 ```
 
-**Run tests:**
-```bash
-bats tests/
-```
-
-**Run a single test file:**
-```bash
-bats tests/test-extension.bats
-```
-
-**Lint Python code:**
-```bash
-black bin/
-pylint bin/
-```
-
-**Lint shell scripts:**
-```bash
-shellcheck <script>
-```
-
-**Install dependencies (development):**
-```bash
-pip install -r requirements_dev.txt
-```
+CI runs ShellCheck and BATS tests on all PRs to main.
 
 ## Architecture
 
+All tools follow a pipeline architecture using stdin/stdout, designed for composition:
+
+```bash
+# Example: Listen to multicast, decode NMEA2000, convert to PONTOS format
+lwe450 NAVD listen | analyzer -json | canboat2pontos vessel-123
+
+# Example: Decode AIS from file
+cat ais-data.nmea | ais decode
+```
+
 ### CLI Tools (bin/)
 
-All tools follow a pipeline architecture using stdin/stdout:
+**ais** - AIS message decoder (encode not yet implemented)
+- Input: NMEA0183 AIS sentences
+- Output: JSON (one object per line)
+- Subcommands: `decode`
 
-- **ais** - AIS message decoder. Reads NMEA0183 AIS sentences from stdin, outputs JSON to stdout. Uses `pyais` library.
-- **lwe450** - LWE450 multicast network interface. Listens to or sends UDP multicast traffic for maritime data transmission groups (NAVD, SATD, etc.).
-- **canboat2pontos** - NMEA2000 to PONTOS format converter. Reads canboat JSON format from stdin, outputs PONTOS-formatted MQTT topic/payload pairs. Handles PGNs for heading, position, rudder, attitude, etc.
+**lwe450** - LWE450 multicast network interface
+- Transmission groups: NAVD, SATD, MISC, TGTD, VDRD, RCOM, TIME, PROP, USR1-8, BAM1-2, CAM1-2, NETA, PGP1-4, PGB1-4
+- Subcommands: `listen` (multicast → stdout), `send` (stdin → multicast)
+- Options: `--base64`, `--interface`, `--TTL`
+
+**canboat2pontos** - NMEA2000 to PONTOS format converter
+- Input: `<timestamp> <canboat json>` (one per line)
+- Output: `<mqtt_topic> <json_payload>` (PONTOS format)
+- Supported PGNs: 127245 (Rudder), 127250 (Heading), 127251 (Rate of Turn), 127257 (Attitude), 127489 (Engine/Fuel), 129025 (Position Rapid), 129026 (COG/SOG), 129029 (GNSS Position)
 
 ### Key Dependencies
 
@@ -62,6 +61,4 @@ Tests use [bats-core](https://github.com/bats-core/bats-core) with bats-support,
 
 ### Docker Build
 
-The Dockerfile uses a multi-stage build:
-1. Build stage compiles canboat tools from source
-2. Final stage is based on `ghcr.io/rise-maritime/porla:v0.5.0`
+Multi-stage build: compiles canboat v6.1.3 from source, then layers on `ghcr.io/rise-maritime/porla:v0.5.0`.
