@@ -1,4 +1,21 @@
-FROM ghcr.io/rise-maritime/porla:v0.4.1
+FROM debian:bookworm AS build
 
-# Add custom binaries to the bin folder in the repository as required
+RUN apt-get update && apt-get install -y \
+    make \
+    gcc \
+    xsltproc \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir canboat && \
+    wget -q -O - https://github.com/canboat/canboat/archive/refs/tags/v6.1.3.tar.gz | tar xvz --strip-components=1 --overwrite -C /canboat && \
+    cd canboat && \
+    make
+
+FROM ghcr.io/rise-maritime/porla:v0.5.0
+
+COPY requirements.txt requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY --from=build --chmod=555 /canboat/rel/linux-x86_64/* /usr/local/bin/
 COPY --chmod=555 ./bin/* /usr/local/bin/
