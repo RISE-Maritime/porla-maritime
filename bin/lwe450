@@ -5,6 +5,8 @@ Command line utility tool for listening to udp traffic and
 outputting to stdout.
 """
 
+# pylint: disable=redefined-outer-name,duplicate-code
+
 import sys
 import socket
 import logging
@@ -44,7 +46,6 @@ TRANSMISSION_GROUPS = {
     "PGB2": ("239.192.0.62", 60062),
     "PGB3": ("239.192.0.63", 60063),
     "PGB4": ("239.192.0.64", 60064),
-
 }
 
 
@@ -59,11 +60,9 @@ def multicast_listen(args: argparse.Namespace):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, args.TTL)
     sock.setsockopt(
-        socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(
-            args.interface)
+        socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(args.interface)
     )
-    sock.setsockopt(socket.IPPROTO_IP,
-                    socket.IP_MULTICAST_LOOP, int(args.loopback))
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, int(args.loopback))
 
     group, port = TRANSMISSION_GROUPS[args.transmission_group]
     sock.setsockopt(
@@ -101,14 +100,12 @@ def multicast_send(args: argparse.Namespace):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, args.TTL)
     sock.setsockopt(
-        socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(
-            args.interface)
+        socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(args.interface)
     )
     group, port = TRANSMISSION_GROUPS[args.transmission_group]
     try:
         for line in sys.stdin:
-            payload = b64decode(
-                line.encode()) if args.base64 else line.encode()
+            payload = b64decode(line.encode()) if args.base64 else line.encode()
             sock.sendto(payload, (group, port))
     finally:
         sock.close()
@@ -116,9 +113,9 @@ def multicast_send(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="lwe450", description="Interface towards a LWE450 multicast network")
-    parser.add_argument("transmission_group",
-                        choices=TRANSMISSION_GROUPS.keys())
+        prog="lwe450", description="Interface towards a LWE450 multicast network"
+    )
+    parser.add_argument("transmission_group", choices=TRANSMISSION_GROUPS.keys())
     parser.add_argument(
         "--base64",
         action="store_true",

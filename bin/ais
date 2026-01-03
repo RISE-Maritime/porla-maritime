@@ -4,6 +4,8 @@
 Command line utility tool for encoding/decoing ais data on stdin/stdout
 """
 
+# pylint: disable=redefined-outer-name
+
 import sys
 import logging
 import argparse
@@ -14,20 +16,24 @@ from pyais.messages import JSONEncoder
 
 logger = logging.getLogger("ais")
 
-def encode(args: argparse.Namespace):
+
+def encode(_args: argparse.Namespace):
     """Encode ais messages to NMEA0183 from JSON
 
     Args:
-        args (argparse.Namespace): Command-line arguments
+        _args (argparse.Namespace): Command-line arguments (unused)
     """
 
-    raise NotImplementedError("Encoding of AIS from JSON to NMEA0183 is not yet supported.")
+    raise NotImplementedError(
+        "Encoding of AIS from JSON to NMEA0183 is not yet supported."
+    )
 
-def decode(args: argparse.Namespace):
+
+def decode(_args: argparse.Namespace):
     """Decode ais messages from NMEA0183 to JSON
 
     Args:
-        args (argparse.Namespace): Command-line arguments
+        _args (argparse.Namespace): Command-line arguments (unused)
     """
 
     with BinaryIOStream(sys.stdin.buffer) as stream:
@@ -51,7 +57,9 @@ def decode(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="ais", description="Encode/decode ais <-> json")
+    parser = argparse.ArgumentParser(
+        prog="ais", description="Encode/decode ais <-> json"
+    )
 
     parser.add_argument("--log-level", type=int, default=logging.INFO)
 

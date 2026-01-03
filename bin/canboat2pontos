@@ -52,18 +52,15 @@ def handler_127257(data: Dict) -> List[Tuple[str, Dict]]:
 def handler_127489(data: Dict) -> List[Tuple[str, Dict]]:
     """Engine Parameters, Dynamic"""
     return [
-        (create_topic("enginemain_fuelcons_lph"),
-         abs(data["fields"]["Fuel Rate"])),
+        (create_topic("enginemain_fuelcons_lph"), abs(data["fields"]["Fuel Rate"])),
     ]
 
 
 def handler_129025(data: Dict) -> List[Tuple[str, Dict]]:
     """Position, Rapid Update"""
     return [
-        (create_topic("positioningsystem_latitude_deg"),
-         data["fields"]["Latitude"]),
-        (create_topic("positioningsystem_longitude_deg"),
-         data["fields"]["Longitude"]),
+        (create_topic("positioningsystem_latitude_deg"), data["fields"]["Latitude"]),
+        (create_topic("positioningsystem_longitude_deg"), data["fields"]["Longitude"]),
     ]
 
 
@@ -74,18 +71,15 @@ def handler_129026(data: Dict) -> List[Tuple[str, Dict]]:
 
     return [
         (create_topic("positioningsystem_cog_deg"), data["fields"]["COG"]),
-        (create_topic("positioningsystem_sog_kn"),
-         data["fields"]["SOG"] / 0.5144),
+        (create_topic("positioningsystem_sog_kn"), data["fields"]["SOG"] / 0.5144),
     ]
 
 
 def handler_129029(data: Dict) -> List[Tuple[str, Dict]]:
     """GNSS Position"""
     return [
-        (create_topic("positioningsystem_latitude_deg"),
-         data["fields"]["Latitude"]),
-        (create_topic("positioningsystem_longitude_deg"),
-         data["fields"]["Longitude"]),
+        (create_topic("positioningsystem_latitude_deg"), data["fields"]["Latitude"]),
+        (create_topic("positioningsystem_longitude_deg"), data["fields"]["Longitude"]),
     ]
 
 
