@@ -1,0 +1,15 @@
+1687410546.523943 {"timestamp":"2023-06-22T18:08:19.439","prio":2,"src":6,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Direction Order":"No Order","Reserved":"00","Angle Order":0.0}}
+1687410546.672819 {"timestamp":"2023-06-22T18:08:19.589","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410546.724886 {"timestamp":"2023-06-22T18:08:19.639","prio":2,"src":6,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Direction Order":"No Order","Reserved":"00","Angle Order":0.0}}
+1687410546.828808 {"timestamp":"2023-06-22T18:08:19.741","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410546.973205 {"timestamp":"2023-06-22T18:08:19.889","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410546.973272 {"timestamp":"2023-06-22T18:08:19.889","prio":2,"src":6,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Direction Order":"No Order","Reserved":"00","Angle Order":0.0}}
+1687410547.075819 {"timestamp":"2023-06-22T18:08:19.989","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410547.172865 {"timestamp":"2023-06-22T18:08:20.089","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410547.172932 {"timestamp":"2023-06-22T18:08:20.089","prio":2,"src":6,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Direction Order":"No Order","Reserved":"00","Angle Order":0.0}}
+1687410547.322846 {"timestamp":"2023-06-22T18:08:20.239","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410547.424833 {"timestamp":"2023-06-22T18:08:20.340","prio":2,"src":6,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Direction Order":"No Order","Reserved":"00","Angle Order":0.0}}
+1687410547.478794 {"timestamp":"2023-06-22T18:08:20.392","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410547.623891 {"timestamp":"2023-06-22T18:08:20.539","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
+1687410547.623959 {"timestamp":"2023-06-22T18:08:20.539","prio":2,"src":6,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Direction Order":"No Order","Reserved":"00","Angle Order":0.0}}
+1687410547.772852 {"timestamp":"2023-06-22T18:08:20.689","prio":2,"src":8,"dst":255,"pgn":127245,"description":"Rudder","fields":{"Reserved":"00","Position":-3.8}}
