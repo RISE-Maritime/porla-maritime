@@ -82,3 +82,27 @@ setup_file() {
     expected_output=$(cat tests/fixtures/canboat2pontos/pgn_127245_expected_output.txt)
     assert_output "$expected_output"
 }
+
+# ==============================================================================
+# keelson codecs for zenoh-cli (from the keelson SDK)
+# ==============================================================================
+
+@test "keelson: codecs are registered with zenoh-cli" {
+    run docker run --rm "$DOCKER_IMAGE" "zenoh put --help"
+
+    assert_success
+    assert_output --partial "keelson-enclose-from-text"
+    assert_output --partial "keelson-uncover-to-json"
+}
+
+@test "keelson: NMEA 0183 lines round-trip through the bus" {
+    run docker run --rm -v "$PWD/tests/fixtures/keelson:/fixtures:ro" "$DOCKER_IMAGE" "source /fixtures/roundtrip.sh"
+
+    assert_success
+    assert_output --partial 'test/@v0/vessel/pubsub/raw_nmea0183/porla/0 {"timestamp": '
+    assert_output --partial '"value": "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47"'
+    assert_output --partial '"value": "$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A"'
+    # Line terminators are not part of the stored value.
+    refute_output --partial '\r'
+    refute_output --partial '\n'
+}
