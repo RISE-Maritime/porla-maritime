@@ -9,3 +9,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+  # keelson is pinned exactly; its subjects.yaml ships inside the SDK, so a
+  # stale pin cannot decode subjects added since.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"

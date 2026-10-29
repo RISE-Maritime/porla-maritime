@@ -52,7 +52,7 @@ cat ais-data.nmea | ais decode
 
 - **pyais** - AIS message encoding/decoding
 - **parse** - String parsing for canboat input format
-- **keelson** - Maritime data utilities
+- **keelson** - SDK pinned exactly in requirements.txt; provides the keelson encoders/decoders for porla's `zenoh` CLI (zenoh-cli entry points). Dependabot (pip) proposes bumps.
 - **canboat** - NMEA2000 tools (built from source in Docker)
 
 ### Testing
